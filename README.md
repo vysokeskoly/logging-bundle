@@ -1,6 +1,12 @@
 Logging Bundle
 ==============
 
+[![Latest Stable Version](https://img.shields.io/packagist/v/vysokeskoly/logging-bundle.svg)](https://packagist.org/packages/vysokeskoly/logging-bundle)
+[![License](https://img.shields.io/packagist/l/vysokeskoly/logging-bundle.svg)](https://packagist.org/packages/vysokeskoly/logging-bundle)
+[![Checks](https://github.com/vysokeskoly/logging-bundle/actions/workflows/checks.yaml/badge.svg)](https://github.com/vysokeskoly/logging-bundle/actions/workflows/checks.yaml)
+[![Build](https://github.com/vysokeskoly/logging-bundle/actions/workflows/php-checks.yaml/badge.svg)](https://github.com/vysokeskoly/logging-bundle/actions/workflows/php-checks.yaml)
+[![Coverage Status](https://coveralls.io/repos/github/vysokeskoly/logging-bundle/badge.svg)](https://coveralls.io/github/vysokeskoly/logging-bundle)
+
 Changelog
 ---------
 See CHANGELOG.md
@@ -12,9 +18,11 @@ Installation
 
 Install using *composer*
 
-    "require": {
-        "vysokeskoly/logging-bundle" : "^7.0"
-    },
+```json
+"require": {
+    "vysokeskoly/logging-bundle" : "^7.0"
+},
+```
 
 ### Step 2
 
@@ -22,6 +30,7 @@ Add VysokeSkolyLoggingBundle to AppKernel to list of loaded bundles. Configure r
 
 **config.yml**
 
+```yaml
     # bundle configuration
     vysoke_skoly_logging:
         app_id: appcz #should not contain dot (.)
@@ -34,6 +43,7 @@ Add VysokeSkolyLoggingBundle to AppKernel to list of loaded bundles. Configure r
     # add channel monolog.logger.perflog and optionally also businesslog channel
     monolog:
          channels: ["perflog", "businesslog"]
+```
 
 ### Step 3
 
@@ -41,6 +51,7 @@ Configure monolog logging options.
 
 **config_prod.yml**
 
+```yaml
     monolog:
         handlers:
             main:
@@ -57,6 +68,7 @@ Configure monolog logging options.
                 publisher: vysokeskoly.monolog.handler.gelf
                 formatter: vysokeskoly.monolog.formatter.gelf.message
                 channels: ["!businesslog"]
+```
 
 Performance logging of commands
 -------------------------------
@@ -65,10 +77,12 @@ Performance logging of HTTP Requests is enabled by default, but you can also ena
 
 You just need to make the Command you want to be performance-logged to implement `PerfloggableCommandInterface` like this:
 
+```php
     class MyGreatCommand extends Command implements PerfloggableCommandInterface
     {
     ...
     }
+```
 
 The execution time of this command will be then measured and sent to the `perflog` channel with metric named
 according to the name of the command.
