@@ -3,6 +3,7 @@
 namespace VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf;
 
 use Gelf\Message;
+use Monolog\LogRecord;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\VarDumper;
@@ -12,12 +13,12 @@ use Symfony\Component\VarDumper\VarDumper;
  */
 class MessageFormatter extends AbstractFormatter
 {
-    public function format(array $record): Message
+    public function format(LogRecord $record): Message
     {
         $message = parent::format($record);
 
-        if (!empty($record['request']['attributes'])) {
-            foreach ($record['request']['attributes'] as $attribute => $value) {
+        if (!empty($record->extra['request']['attributes'])) {
+            foreach ($record->extra['request']['attributes'] as $attribute => $value) {
                 if (empty($value)) {
                     continue;
                 }
@@ -34,14 +35,14 @@ class MessageFormatter extends AbstractFormatter
         }
 
         $fullMessage = '';
-        if (!empty($record['request']['query'])) {
+        if (!empty($record->extra['request']['query'])) {
             $fullMessage .= "\n------ GET ------\n"
-                . var_export($record['request']['query'], true);
+                . var_export($record->extra['request']['query'], true);
         }
 
-        if (!empty($record['context']['exception'])) {
+        if (!empty($record->context['exception'])) {
             /** @var \Exception $exception */
-            $exception = $record['context']['exception'];
+            $exception = $record->context['exception'];
 
             $fullMessage .= "\n------ Exception ------\n";
             $fullMessage .= $exception->getMessage() . "\n";

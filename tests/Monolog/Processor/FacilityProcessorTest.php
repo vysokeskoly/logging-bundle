@@ -2,16 +2,30 @@
 
 namespace VysokeSkoly\LoggingBundle\Monolog\Processor;
 
-use PHPUnit\Framework\TestCase;
+use Monolog\Processor\ProcessorInterface;
+use VysokeSkoly\LoggingBundle\AbstractTestCase;
 
-class FacilityProcessorTest extends TestCase
+class FacilityProcessorTest extends AbstractTestCase
 {
+    private FacilityProcessor $facilityProcessor;
+
+    protected function setUp(): void
+    {
+        $this->facilityProcessor = new FacilityProcessor('wwwappcz');
+    }
+
+    public function testShouldImplementProcessorInterface(): void
+    {
+        $this->assertInstanceOf(ProcessorInterface::class, $this->facilityProcessor);
+    }
+
     public function testShouldSetFacilityAsChannelInRecord(): void
     {
         $facility = 'wwwappcz';
-        $processor = new FacilityProcessor('wwwappcz');
-        $record = $processor([]);
+        $processor = $this->facilityProcessor;
+        $record = $processor($this->emptyRecord());
 
         $this->assertEquals($facility, $record['channel']);
+        $this->assertEquals($facility, $record->channel);
     }
 }

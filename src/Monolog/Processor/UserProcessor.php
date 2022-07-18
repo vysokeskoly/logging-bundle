@@ -2,19 +2,18 @@
 
 namespace VysokeSkoly\LoggingBundle\Monolog\Processor;
 
+use Monolog\LogRecord;
+use Monolog\Processor\ProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Security\Core\Security;
 
-class UserProcessor
+class UserProcessor implements ProcessorInterface
 {
-    protected ContainerInterface $container;
-
-    public function __construct(ContainerInterface $container)
+    public function __construct(protected ContainerInterface $container)
     {
-        $this->container = $container;
     }
 
-    public function __invoke(array $record): array
+    public function __invoke(LogRecord $record): LogRecord
     {
         if (!$this->container->has('security.helper')) {
             return $record;
@@ -23,7 +22,7 @@ class UserProcessor
         /** @var Security $security */
         $security = $this->container->get('security.helper');
         if (($user = $security->getUser())) {
-            $record['context']['user'] = $user;
+            return $record->with(context: ['user' => $user]);
         }
 
         return $record;

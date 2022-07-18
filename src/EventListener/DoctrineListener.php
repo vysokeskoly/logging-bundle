@@ -8,20 +8,11 @@ use Symfony\Component\HttpKernel\Event\TerminateEvent;
 
 class DoctrineListener
 {
-    protected DoctrineDataCollector $doctrineDataCollector;
-    protected \Monolog\Logger $logger;
-
-    /** @var int|null Threshold for slow queries */
-    protected ?int $doctrineExecuteTimeThreshold;
-
     public function __construct(
-        DoctrineDataCollector $doctrineDataCollector,
-        Logger $logger,
-        ?int $doctrineExecuteTimeThreshold
+        protected DoctrineDataCollector $doctrineDataCollector,
+        protected Logger $logger,
+        protected ?int $doctrineExecuteTimeThreshold,
     ) {
-        $this->doctrineDataCollector = $doctrineDataCollector;
-        $this->logger = $logger;
-        $this->doctrineExecuteTimeThreshold = $doctrineExecuteTimeThreshold;
     }
 
     public function onKernelTerminate(TerminateEvent $event): void
@@ -41,7 +32,7 @@ class DoctrineListener
                         [
                             'time' => $timeInMilliseconds,
                             'query' => $query['sql'],
-                        ]
+                        ],
                     );
                 }
             }

@@ -15,9 +15,9 @@ use Symfony\Component\Stopwatch\StopwatchEvent;
 class TerminateListenerTest extends TestCase
 {
     /** @var MockObject|Stopwatch */
-    protected $stopwatch;
+    protected Stopwatch $stopwatch;
     /** @var MockObject|Logger */
-    protected $logger;
+    protected Logger $logger;
 
     protected function setUp(): void
     {

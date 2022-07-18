@@ -7,11 +7,8 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class RequestListener implements EventSubscriberInterface
 {
-    protected Stopwatch $stopwatch;
-
-    public function __construct(Stopwatch $stopwatch)
+    public function __construct(protected Stopwatch $stopwatch)
     {
-        $this->stopwatch = $stopwatch;
     }
 
     /**

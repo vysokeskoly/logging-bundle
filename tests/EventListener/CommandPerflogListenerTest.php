@@ -18,9 +18,9 @@ use VysokeSkoly\LoggingBundle\Command\PerfloggableCommandInterface;
 class CommandPerflogListenerTest extends TestCase
 {
     /** @var MockObject|Stopwatch */
-    protected $stopwatchMock;
-    /** @var MockObject|LoggerInterface */
-    protected $loggerMock;
+    protected Stopwatch $stopwatchMock;
+    /** @var MockObject|LoggerInterface|Logger */
+    protected LoggerInterface $loggerMock;
 
     protected function setUp(): void
     {
@@ -33,7 +33,7 @@ class CommandPerflogListenerTest extends TestCase
      */
     public function testShouldStartStopwatchOnlyForCommandsImplementingPerfloggableInterface(
         Command $command,
-        bool $shouldStart
+        bool $shouldStart,
     ): void {
         $stopwatch = new Stopwatch();
         $listener = new CommandPerflogListener($stopwatch, $this->loggerMock);
@@ -41,7 +41,7 @@ class CommandPerflogListenerTest extends TestCase
         $event = new ConsoleCommandEvent(
             $command,
             new StringInput(''),
-            new NullOutput()
+            new NullOutput(),
         );
 
         $listener->onConsoleCommand($event);
@@ -86,7 +86,7 @@ class CommandPerflogListenerTest extends TestCase
             new Command(),
             new StringInput(''),
             new NullOutput(),
-            0
+            0,
         );
         $listener->onConsoleTerminate($event);
     }
@@ -120,10 +120,7 @@ class CommandPerflogListenerTest extends TestCase
         $listener->onConsoleTerminate($event);
     }
 
-    /**
-     * @return MockObject|StopwatchEvent
-     */
-    protected function getStopwatchEventMock(int $endTime)
+    protected function getStopwatchEventMock(int $endTime): MockObject|StopwatchEvent
     {
         $stopwatchEvent = $this->createMock(StopwatchEvent::class);
 

@@ -2,13 +2,30 @@
 
 namespace VysokeSkoly\LoggingBundle\Monolog\Processor;
 
-use PHPUnit\Framework\TestCase;
+use Monolog\Processor\ProcessorInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
+use VysokeSkoly\LoggingBundle\AbstractTestCase;
 
-class UserProcessorTest extends TestCase
+class UserProcessorTest extends AbstractTestCase
 {
+    private UserProcessor $processor;
+    /** @var ContainerInterface|MockObject */
+    private ContainerInterface $container;
+
+    protected function setUp(): void
+    {
+        $this->container = $this->createMock(ContainerInterface::class);
+        $this->processor = new UserProcessor($this->container);
+    }
+
+    public function testShouldImplementProcessorInterface(): void
+    {
+        $this->assertInstanceOf(ProcessorInterface::class, $this->processor);
+    }
+
     public function testShouldSetUserToRecord(): void
     {
         $user = $this->createMock(UserInterface::class);
@@ -18,20 +35,18 @@ class UserProcessorTest extends TestCase
             ->method('getUser')
             ->willReturn($user);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects($this->once())
+        $this->container->expects($this->once())
             ->method('has')
             ->with('security.helper')
             ->willReturn(true);
-        $container->expects($this->once())
+        $this->container->expects($this->once())
             ->method('get')
             ->with('security.helper')
             ->willReturn($security);
 
-        $processor = new UserProcessor($container);
-        $record = $processor([]);
+        $record = $this->processor->__invoke($this->emptyRecord());
 
-        $this->assertEquals($user, $record['context']['user']);
+        $this->assertEquals($user, $record->context['user']);
     }
 
     public function testShouldNotSetContextWhenTokenIsNotAvailable(): void
@@ -41,33 +56,30 @@ class UserProcessorTest extends TestCase
             ->method('getUser')
             ->willReturn(null);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects($this->once())
+        $this->container->expects($this->once())
             ->method('has')
             ->with('security.helper')
             ->willReturn(true);
-        $container->expects($this->once())
+        $this->container->expects($this->once())
             ->method('get')
             ->with('security.helper')
             ->willReturn($security);
 
-        $processor = new UserProcessor($container);
-        $record = $processor([]);
+        $record = $this->processor->__invoke($this->emptyRecord());
 
-        $this->assertArrayNotHasKey('context', $record);
+        $this->assertEmpty($record->context);
     }
 
     public function testShouldWorkWithoutSecurityContextService(): void
     {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects($this->once())
+        $this->container->expects($this->once())
             ->method('has')
             ->with('security.helper')
             ->willReturn(false);
 
-        $processor = new UserProcessor($container);
-        $record = $processor([]);
+        $originalRecord = $this->emptyRecord();
+        $record = $this->processor->__invoke($originalRecord);
 
-        $this->assertEquals([], $record);
+        $this->assertSame($originalRecord, $record);
     }
 }

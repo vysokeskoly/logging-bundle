@@ -2,6 +2,8 @@
 
 namespace VysokeSkoly\LoggingBundle\Monolog\Formatter;
 
+use Monolog\Level;
+use Monolog\LogRecord;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -9,23 +11,23 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class ExtendedFormatterTest extends TestCase
 {
     protected ExtendedFormatter $formatter;
-    protected array $record;
+    protected LogRecord $record;
 
     protected function setUp(): void
     {
         $this->formatter = new ExtendedFormatter();
-        $this->record = [
-            'level' => 200,
-            'level_name' => 'INFO',
-            'datetime' => new \DateTime('1.1.2011'),
-            'message' => 'Error: Newbie in da house',
-            'extra' => [
+        $this->record = new LogRecord(
+            new \DateTimeImmutable('1.1.2011'),
+            'app.cz',
+            Level::Info,
+            'Error: Newbie in da house',
+            extra: [
                 'url' => 'http://www.w3.org/',
                 'ip' => '82.113.38.98',
                 'ua' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) '
                     . 'Chrome/37.0.2062.122 Safari/537.36',
             ],
-        ];
+        );
     }
 
     public function testShouldFormatBaseOutput(): void
@@ -39,13 +41,13 @@ class ExtendedFormatterTest extends TestCase
         $this->assertStringContainsString(
             'UA: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 '
             . '(KHTML, like Gecko) Chrome/37.0.2062.122 Safari/537.36',
-            $output
+            $output,
         );
     }
 
     public function testShouldFormatOutputWithParameters(): void
     {
-        $this->record['request'] = [
+        $this->record->extra['request'] = [
             'query' => ['foo' => 'bar'],
             'request' => ['bar' => 'baz'],
         ];
@@ -66,9 +68,7 @@ class ExtendedFormatterTest extends TestCase
             }
         };
 
-        $this->record['context'] = [
-            'user' => $user,
-        ];
+        $this->record = $this->record->with(context: ['user' => $user]);
 
         $output = $this->formatter->format($this->record);
 
@@ -84,9 +84,7 @@ class ExtendedFormatterTest extends TestCase
             }
         };
 
-        $this->record['context'] = [
-            'user' => $user,
-        ];
+        $this->record = $this->record->with(context: ['user' => $user]);
 
         $output = $this->formatter->format($this->record);
 
@@ -98,15 +96,15 @@ class ExtendedFormatterTest extends TestCase
         try {
             throw new NotFoundHttpException('Exception message barbaz', null, 1337);
         } catch (NotFoundHttpException $e) {
-            $this->record['message'] = $e->getMessage();
-            $this->record['context']['exception'] = $e;
+            $this->record = $this->record->with(message: $e->getMessage());
+            $this->record = $this->record->with(context: ['exception' => $e]);
         }
 
         $output = $this->formatter->format($this->record);
         $this->assertStringContainsString('Exception: Exception message barbaz (1337)', $output);
         $this->assertStringContainsString(
             'VysokeSkoly\LoggingBundle\Monolog\Formatter\ExtendedFormatterTest->testShouldFormatOutputWithException()',
-            $output
+            $output,
         );
     }
 
@@ -119,8 +117,8 @@ class ExtendedFormatterTest extends TestCase
                 throw new HttpException(401, 'Exception with previous exception', $e);
             }
         } catch (HttpException $e) {
-            $this->record['message'] = $e->getMessage();
-            $this->record['context']['exception'] = $e;
+            $this->record = $this->record->with(message: $e->getMessage());
+            $this->record = $this->record->with(context: ['exception' => $e]);
         }
 
         $output = $this->formatter->format($this->record);
@@ -128,11 +126,11 @@ class ExtendedFormatterTest extends TestCase
         $this->assertStringContainsString(
             'Previous Exception' . "\n"
             . 'Exception message barbaz',
-            $output
+            $output,
         );
         $this->assertStringContainsString(
             'VysokeSkoly\LoggingBundle\Monolog\Formatter\ExtendedFormatterTest->testShouldFormatOutputWithPreviousException()',
-            $output
+            $output,
         );
     }
 }

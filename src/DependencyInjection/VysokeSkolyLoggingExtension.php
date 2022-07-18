@@ -23,7 +23,7 @@ class VysokeSkolyLoggingExtension extends Extension
         $container->setParameter('vysokeskoly_logging.perflog_threshold', $config['perflog_threshold']);
         $container->setParameter(
             'vysokeskoly_logging.doctrine_execute_time_threshold',
-            array_key_exists('doctrine_execute_time_threshold', $config) ? $config['doctrine_execute_time_threshold'] : null
+            array_key_exists('doctrine_execute_time_threshold', $config) ? $config['doctrine_execute_time_threshold'] : null,
         );
         $container->setParameter('vysokeskoly_logging.graylog_hostname', $config['graylog']['hostname']);
         $container->setParameter('vysokeskoly_logging.graylog_port', $config['graylog']['port']);

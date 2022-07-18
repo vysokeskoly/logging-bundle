@@ -8,23 +8,17 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class TerminateListener
 {
-    protected Stopwatch $stopwatch;
-    protected Logger $logger;
-
-    /** Threshold for slow requests */
-    protected float $perflogThreshold;
-
     /** Name or routes associated with Symfony profiler */
-    protected array $profilerRoutes = [
+    protected const PROFILER_ROUTES = [
         '_profiler',
         '_wdt',
     ];
 
-    public function __construct(Stopwatch $stopwatch, Logger $logger, float $perflogThreshold)
-    {
-        $this->stopwatch = $stopwatch;
-        $this->logger = $logger;
-        $this->perflogThreshold = $perflogThreshold;
+    public function __construct(
+        protected Stopwatch $stopwatch,
+        protected Logger $logger,
+        protected float $perflogThreshold,
+    ) {
     }
 
     /**
@@ -39,7 +33,7 @@ class TerminateListener
         $result = $this->stopwatch->stop('execTime');
 
         // Filter out profiler requests
-        if (!in_array($event->getRequest()->get('_route'), $this->profilerRoutes, true)) {
+        if (!in_array($event->getRequest()->get('_route'), self::PROFILER_ROUTES, true)) {
             $time = $result->getEndTime() / 1000;
             if ($time > $this->perflogThreshold) {
                 $this->logger->warning('Performance alert', ['time' => $time]);

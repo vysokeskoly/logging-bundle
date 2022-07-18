@@ -6,11 +6,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class DummyUser implements UserInterface
 {
-    private string $username;
-
-    public function __construct(string $username)
+    public function __construct(private string $username)
     {
-        $this->username = $username;
     }
 
     public function getRoles(): array
@@ -35,5 +32,10 @@ class DummyUser implements UserInterface
 
     public function eraseCredentials(): void
     {
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->getUsername();
     }
 }

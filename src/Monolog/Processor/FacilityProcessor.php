@@ -2,29 +2,23 @@
 
 namespace VysokeSkoly\LoggingBundle\Monolog\Processor;
 
+use Monolog\LogRecord;
+use Monolog\Processor\ProcessorInterface;
+
 /**
  * Injects application facility to the log record
  */
-class FacilityProcessor
+class FacilityProcessor implements ProcessorInterface
 {
-    private string $facility;
-
     /**
      * @param string $facility Application identification
      */
-    public function __construct(string $facility)
+    public function __construct(private string $facility)
     {
-        $this->facility = $facility;
     }
 
-    /**
-     * @param array $record Current log record
-     * @return array Log record with additional data
-     */
-    public function __invoke(array $record): array
+    public function __invoke(LogRecord $record): LogRecord
     {
-        $record['channel'] = $this->facility;
-
-        return $record;
+        return $record->with(channel: $this->facility);
     }
 }

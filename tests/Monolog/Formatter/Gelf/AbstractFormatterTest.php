@@ -2,6 +2,8 @@
 
 namespace VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf;
 
+use Monolog\Level;
+use Monolog\LogRecord;
 use PHPUnit\Framework\TestCase;
 use VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf\Fixtures\DummyUser;
 use VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf\Fixtures\TestFormatter;
@@ -11,21 +13,18 @@ use VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf\Fixtures\TestFormatter;
  */
 class AbstractFormatterTest extends TestCase
 {
-    protected array $record;
-
+    protected LogRecord $record;
     protected AbstractFormatter $formatter;
 
     protected function setUp(): void
     {
-        $this->record = [
-            'message' => 'Event message',
-            'context' => ['foo' => 'bar'] ,
-            'channel' => 'app.cz',
-            'level' => 400,
-            'level_name' => 'ERROR',
-            'datetime' => new \DateTime('1.1.2011'),
-            'extra' => [],
-        ];
+        $this->record = new LogRecord(
+            new \DateTimeImmutable('1.1.2011'),
+            'app.cz',
+            Level::Error,
+            'Event message',
+            ['foo' => 'bar'],
+        );
         $this->formatter = new TestFormatter();
     }
 
@@ -37,7 +36,7 @@ class AbstractFormatterTest extends TestCase
     public function testShouldExtendMessageWithUserInformation(): void
     {
         $user = new DummyUser('user@name.cz');
-        $this->record['context']['user'] = $user;
+        $this->record = $this->record->with(context: ['user' => $user]);
 
         $message = $this->formatter->format($this->record);
 

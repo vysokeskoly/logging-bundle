@@ -14,11 +14,11 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 class DoctrineListenerTest extends TestCase
 {
     /** @var MockObject|Logger */
-    protected $logger;
+    protected Logger $logger;
     /** @var MockObject|Request */
-    protected $request;
+    protected Request $request;
     /** @var MockObject|Response */
-    protected $response;
+    protected Response $response;
 
     protected function setUp(): void
     {
@@ -74,7 +74,7 @@ class DoctrineListenerTest extends TestCase
                 [
                     'time' => 200,
                     'query' => 'SELECT * FROM finances',
-                ]
+                ],
             );
 
         $listener = new DoctrineListener($doctrineDataCollector, $logger, 50);
