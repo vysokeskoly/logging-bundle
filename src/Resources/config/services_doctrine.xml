@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="vysokeskoly.monolog.listener.doctrine_listener" class="VysokeSkoly\LoggingBundle\EventListener\DoctrineListener">
+            <argument type="service" id="data_collector.doctrine" />
+            <argument type="service" id="monolog.logger.perflog" />
+            <argument>%vysokeskoly_logging.doctrine_execute_time_threshold%</argument>
+            <tag name="kernel.event_listener" event="kernel.terminate" method="onKernelTerminate" priority="-256" />
+        </service>
+
+    </services>
+</container>
