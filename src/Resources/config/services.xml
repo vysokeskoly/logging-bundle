@@ -1,0 +1,69 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+
+        <!-- Formatters -->
+        <service id="vysokeskoly.monolog.formatter.extended" class="VysokeSkoly\LoggingBundle\Monolog\Formatter\ExtendedFormatter" />
+        <service id="vysokeskoly.monolog.formatter.gelf.message" class="VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf\MessageFormatter" />
+        <service id="vysokeskoly.monolog.formatter.gelf.businesslog" class="VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf\BusinesslogFormatter" />
+
+        <!-- Processors -->
+        <service id="vysokeskoly.monolog.processors.web" class="VysokeSkoly\LoggingBundle\Monolog\Processor\RequestProcessor">
+            <tag name="monolog.processor" />
+            <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" priority="512" />
+        </service>
+
+        <service id="vysokeskoly.monolog.processors.message" class="Monolog\Processor\PsrLogMessageProcessor">
+            <tag name="monolog.processor" />
+        </service>
+
+        <service id="vysokeskoly.monolog.processors.facility" class="VysokeSkoly\LoggingBundle\Monolog\Processor\FacilityProcessor" public="false">
+            <argument>%vysokeskoly_logging.graylog_facility%</argument>
+            <tag name="monolog.processor" />
+        </service>
+
+        <service id="vysokeskoly.monolog.processors.user" class="VysokeSkoly\LoggingBundle\Monolog\Processor\UserProcessor" public="false">
+            <argument type="service" id="service_container" />
+            <tag name="monolog.processor" />
+        </service>
+
+        <!-- Handlers -->
+        <service id="vysokeskoly.monolog.transport.gelf" class="Gelf\Transport\UdpTransport" public="false">
+            <argument>%vysokeskoly_logging.graylog_hostname%</argument>
+            <argument>%vysokeskoly_logging.graylog_port%</argument>
+        </service>
+
+        <service id="vysokeskoly.monolog.handler.gelf" class="Gelf\Publisher">
+            <argument type="service" id="vysokeskoly.monolog.transport.gelf" />
+        </service>
+
+        <!-- Listeners -->
+        <service id="vysokeskoly.monolog.perflog.stopwatch" class="Symfony\Component\Stopwatch\Stopwatch" />
+
+        <service id="vysokeskoly.monolog.listener.request_listener" class="VysokeSkoly\LoggingBundle\EventListener\RequestListener">
+            <argument type="service" id="vysokeskoly.monolog.perflog.stopwatch" />
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <service id="vysokeskoly.monolog.listener.terminate_listener" class="VysokeSkoly\LoggingBundle\EventListener\TerminateListener">
+            <argument type="service" id="vysokeskoly.monolog.perflog.stopwatch" />
+            <argument type="service" id="monolog.logger.perflog" />
+            <argument>%vysokeskoly_logging.perflog_threshold%</argument>
+            <tag name="kernel.event_listener" event="kernel.terminate" method="onKernelTerminate" priority="-256" />
+        </service>
+
+        <service id="vysokeskoly.monolog.perflog.stopwatch_command" class="Symfony\Component\Stopwatch\Stopwatch" public="false" />
+
+        <service id="kernel.listener.command_perflog" class="VysokeSkoly\LoggingBundle\EventListener\CommandPerflogListener">
+            <argument type="service" id="vysokeskoly.monolog.perflog.stopwatch_command" />
+            <argument type="service" id="monolog.logger.perflog" />
+            <tag name="kernel.event_listener" event="console.command" method="onConsoleCommand"  priority="255"/>
+            <tag name="kernel.event_listener" event="console.terminate"  method="onConsoleTerminate" priority="-256" />
+        </service>
+
+    </services>
+</container>
