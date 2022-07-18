@@ -2,6 +2,7 @@
 
 namespace VysokeSkoly\LoggingBundle\Monolog\Processor;
 
+use Monolog\LogRecord;
 use Monolog\Processor\WebProcessor;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -26,25 +27,25 @@ class RequestProcessor extends WebProcessor
         ]);
     }
 
-    public function __invoke(array $record): array
+    public function __invoke(LogRecord $originalRecord): LogRecord
     {
-        $record = parent::__invoke($record);
+        $record = parent::__invoke($originalRecord);
 
         // Symfony added attributes, GET query string
         foreach (['attributes', 'query'] as $key) {
             if (!empty($this->request->{$key}) && $this->request->{$key}->count()) {
-                $record['request'][$key] = $this->request->{$key}->all();
+                $record->extra['request'][$key] = $this->request->{$key}->all();
             }
         }
 
-        $record['request']['request'] = []; // POST is no longer added to record, empty array is used instead to keep BC
+        $record->extra['request']['request'] = []; // POST is no longer added to record, empty array is used instead to keep BC
 
-        $record['extra'] = array_merge(
-            $record['extra'],
+        $record->extra = array_merge(
+            $record->extra,
             [
                 'ua' => $this->serverData['HTTP_USER_AGENT'] ?? null,
                 'ip' => $this->clientIp,
-            ]
+            ],
         );
 
         return $record;

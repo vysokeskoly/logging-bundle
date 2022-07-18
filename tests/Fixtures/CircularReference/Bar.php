@@ -4,11 +4,8 @@ namespace VysokeSkoly\LoggingBundle\Fixtures\CircularReference;
 
 class Bar
 {
-    private Foo $foo;
-
-    public function __construct(Foo $foo)
+    public function __construct(private Foo $foo)
     {
-        $this->foo = $foo;
     }
 
     public function getFoo(): Foo

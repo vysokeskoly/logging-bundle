@@ -15,13 +15,8 @@ class CommandPerflogListener
 {
     public const STOPWATCH_NAME = 'commandExecTime';
 
-    protected Stopwatch $stopwatch;
-    protected LoggerInterface $logger;
-
-    public function __construct(Stopwatch $stopwatch, LoggerInterface $logger)
+    public function __construct(protected Stopwatch $stopwatch, protected LoggerInterface $logger)
     {
-        $this->stopwatch = $stopwatch;
-        $this->logger = $logger;
     }
 
     public function onConsoleCommand(ConsoleCommandEvent $event): void
@@ -48,7 +43,7 @@ class CommandPerflogListener
                 'metric' => ($command = $event->getCommand())
                     ? $command->getName() ?? 'unknown'
                     : 'unknown',
-            ]
+            ],
         );
     }
 }

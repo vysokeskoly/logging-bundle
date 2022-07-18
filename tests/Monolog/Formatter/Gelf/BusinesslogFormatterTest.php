@@ -2,6 +2,8 @@
 
 namespace VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf;
 
+use Monolog\Level;
+use Monolog\LogRecord;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -9,21 +11,18 @@ use PHPUnit\Framework\TestCase;
  */
 class BusinesslogFormatterTest extends TestCase
 {
-    protected array $record;
-
+    protected LogRecord $record;
     protected BusinesslogFormatter $formatter;
 
     protected function setUp(): void
     {
-        $this->record = [
-            'message' => 'metricname',
-            'context' => ['foo' => 'bar'] ,
-            'channel' => 'app.cz',
-            'level' => 400,
-            'level_name' => 'ERROR',
-            'datetime' => new \DateTime('1.1.2011'),
-            'extra' => [],
-        ];
+        $this->record = new LogRecord(
+            new \DateTimeImmutable('1.1.2011'),
+            'app.cz',
+            Level::Error,
+            'metricname',
+            ['foo' => 'bar'],
+        );
         $this->formatter = new BusinesslogFormatter();
     }
 

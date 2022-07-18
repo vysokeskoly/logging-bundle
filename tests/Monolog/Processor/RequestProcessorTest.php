@@ -2,36 +2,38 @@
 
 namespace VysokeSkoly\LoggingBundle\Monolog\Processor;
 
+use Monolog\Level;
+use Monolog\LogRecord;
+use Monolog\Processor\ProcessorInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 
-/**
- * @phpstan-import-type Record from \Monolog\Logger
- */
 class RequestProcessorTest extends TestCase
 {
-    /** @phpstan-var Record */
-    protected array $record;
-
+    protected LogRecord $record;
     protected RequestProcessor $processor;
 
     protected function setUp(): void
     {
-        $this->record = [
-            'message' => 'Event message',
-            'context' => [],
-            'channel' => 'app.cz',
-            'level' => 400,
-            'level_name' => 'ERROR',
-            'datetime' => new \DateTimeImmutable('1.1.2011'),
-            'extra' => [],
-        ];
+        $this->record = new LogRecord(
+            new \DateTimeImmutable('1.1.2011'),
+            'app.cz',
+            Level::Error,
+            'Event message',
+        );
+
+        $this->processor = new RequestProcessor();
     }
 
     protected function tearDown(): void
     {
         unset($this->record);
+    }
+
+    public function testShouldImplementProcessorInterface(): void
+    {
+        $this->assertInstanceOf(ProcessorInterface::class, $this->processor);
     }
 
     public function testShouldExtendRecordWithRequestAttributesAndQueryData(): void
@@ -49,14 +51,13 @@ class RequestProcessorTest extends TestCase
 
         $event = $this->getResponseEvent($request);
 
-        $processor = new RequestProcessor();
-        $processor->onKernelRequest($event);
-        /** @var array $record */
-        $record = $processor($this->record);
+        $this->processor->onKernelRequest($event);
+        /** @var LogRecord $record */
+        $record = $this->processor->__invoke($this->record);
 
-        $this->assertEquals($attributes, $record['request']['attributes']);
-        $this->assertEquals($query, $record['request']['query']);
-        $this->assertSame([], $record['request']['request']); // POST data should not be added for security reasons
+        $this->assertEquals($attributes, $record->extra['request']['attributes']);
+        $this->assertEquals($query, $record->extra['request']['query']);
+        $this->assertSame([], $record->extra['request']['request']); // POST data should not be added for security reasons
     }
 
     public function testShouldExtendRecordWithUserAgent(): void
@@ -71,11 +72,11 @@ class RequestProcessorTest extends TestCase
 
         $event = $this->getResponseEvent($request);
 
-        $processor = new RequestProcessor();
-        $processor->onKernelRequest($event);
-        $record = $processor($this->record);
+        $this->processor = new RequestProcessor();
+        $this->processor->onKernelRequest($event);
+        $record = $this->processor->__invoke($this->record);
 
-        $this->assertEquals($server['HTTP_USER_AGENT'], $record['extra']['ua']);
+        $this->assertEquals($server['HTTP_USER_AGENT'], $record->extra['ua']);
     }
 
     public function testShouldExtendRecordWithClientIpFromRemoteAddr(): void
@@ -90,11 +91,11 @@ class RequestProcessorTest extends TestCase
 
         $event = $this->getResponseEvent($request);
 
-        $processor = new RequestProcessor();
-        $processor->onKernelRequest($event);
-        $record = $processor($this->record);
+        $this->processor = new RequestProcessor();
+        $this->processor->onKernelRequest($event);
+        $record = $this->processor->__invoke($this->record);
 
-        $this->assertEquals($server['REMOTE_ADDR'], $record['extra']['ip']);
+        $this->assertEquals($server['REMOTE_ADDR'], $record->extra['ip']);
     }
 
     public function testShouldExtendRecordWithClientIpFromXForwardedFor(): void
@@ -110,15 +111,15 @@ class RequestProcessorTest extends TestCase
         $request = new Request();
         $request->server->replace($server);
         $request->headers->replace($headers);
-        $request::setTrustedProxies(['10.0.0.0/8'], Request::HEADER_X_FORWARDED_ALL);
+        $request::setTrustedProxies(['10.0.0.0/8'], Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_HOST | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO | Request::HEADER_X_FORWARDED_PREFIX);
 
         $event = $this->getResponseEvent($request);
 
-        $processor = new RequestProcessor();
-        $processor->onKernelRequest($event);
-        $record = $processor($this->record);
+        $this->processor = new RequestProcessor();
+        $this->processor->onKernelRequest($event);
+        $record = $this->processor->__invoke($this->record);
 
-        $this->assertEquals($headers['X_FORWARDED_FOR'], $record['extra']['ip']);
+        $this->assertEquals($headers['X_FORWARDED_FOR'], $record->extra['ip']);
     }
 
     public function getResponseEvent(Request $request): RequestEvent

@@ -20,7 +20,7 @@ Install using *composer*
 
 ```json
 "require": {
-    "vysokeskoly/logging-bundle" : "^7.0"
+    "vysokeskoly/logging-bundle" : "^8.0"
 },
 ```
 

@@ -4,17 +4,18 @@ namespace VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf;
 
 use Gelf\Message;
 use Monolog\Formatter\GelfMessageFormatter;
+use Monolog\LogRecord;
 
 /**
  * Serializes a log message to GELF format and adds some additional information
  */
 class AbstractFormatter extends GelfMessageFormatter
 {
-    public function format(array $record): Message
+    public function format(LogRecord $record): Message
     {
         $message = parent::format($record);
 
-        if (($user = $record['context']['user'] ?? null) && is_object($user)) {
+        if (($user = $record->context['user'] ?? null) && is_object($user)) {
             if (method_exists($user, 'getUsername')) {
                 $email = $user->getUsername();
             } elseif (method_exists($user, 'getUserIdentifier')) {

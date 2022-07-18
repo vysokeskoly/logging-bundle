@@ -2,6 +2,8 @@
 
 namespace VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf;
 
+use Monolog\Level;
+use Monolog\LogRecord;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -13,20 +15,17 @@ use VysokeSkoly\LoggingBundle\Fixtures\CircularReference\Foo;
  */
 class MessageFormatterTest extends TestCase
 {
-    protected array $record;
+    protected LogRecord $record;
     protected MessageFormatter $formatter;
 
     protected function setUp(): void
     {
-        $this->record = [
-            'message' => 'Event message',
-            'context' => [],
-            'channel' => 'app.cz',
-            'level' => 400,
-            'level_name' => 'ERROR',
-            'datetime' => new \DateTime('1.1.2011'),
-            'extra' => [],
-        ];
+        $this->record = new LogRecord(
+            new \DateTimeImmutable('1.1.2011'),
+            'app.cz',
+            Level::Error,
+            'Event message',
+        );
         $this->formatter = new MessageFormatter();
     }
 
@@ -37,12 +36,10 @@ class MessageFormatterTest extends TestCase
 
     /**
      * @dataProvider attributesProvider
-     *
-     * @param mixed $value
      */
-    public function testShouldExtendMessageWithRequestAttributes(string $key, $value): void
+    public function testShouldExtendMessageWithRequestAttributes(string $key, mixed $value): void
     {
-        $this->record['request']['attributes'] = [$key => $value];
+        $this->record->extra['request']['attributes'] = [$key => $value];
         $message = $this->formatter->format($this->record);
         $dumpedValue = $message->getAdditional(sprintf('attribute_%s', $key));
 
@@ -66,7 +63,7 @@ class MessageFormatterTest extends TestCase
 
     public function testShouldExtendFullMessageWithGetData(): void
     {
-        $this->record['request']['query'] = ['foo' => 'bar', 'bar' => 'baz'];
+        $this->record->extra['request']['query'] = ['foo' => 'bar', 'bar' => 'baz'];
 
         $message = $this->formatter->format($this->record);
         $expected = <<<DATA
@@ -86,8 +83,8 @@ class MessageFormatterTest extends TestCase
         try {
             throw new NotFoundHttpException('Exception message barbaz');
         } catch (NotFoundHttpException $e) {
-            $this->record['message'] = $e->getMessage();
-            $this->record['context']['exception'] = $e;
+            $this->record = $this->record->with(message: $e->getMessage());
+            $this->record = $this->record->with(context: ['exception' => $e]);
         }
 
         $message = $this->formatter->format($this->record);
@@ -96,7 +93,7 @@ class MessageFormatterTest extends TestCase
         $this->assertStringMatchesFormat(
             '%A#0 %S VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf\MessageFormatterTest->'
             . 'testShouldExtendFullMessageWithException()%A',
-            $message->getFullMessage()
+            $message->getFullMessage(),
         );
     }
 
@@ -109,8 +106,8 @@ class MessageFormatterTest extends TestCase
                 throw new HttpException(401, 'Exception with previous exception', $e);
             }
         } catch (HttpException $e) {
-            $this->record['message'] = $e->getMessage();
-            $this->record['context']['exception'] = $e;
+            $this->record = $this->record->with(message: $e->getMessage());
+            $this->record = $this->record->with(context: ['exception' => $e]);
         }
 
         $message = $this->formatter->format($this->record);
@@ -121,7 +118,7 @@ class MessageFormatterTest extends TestCase
 Exception message barbaz' . "\n"
             . '#0 %S VysokeSkoly\LoggingBundle\Monolog\Formatter\Gelf\MessageFormatterTest->'
             . 'testShouldExtendFullMessageWithPreviousException()%A',
-            $message->getFullMessage()
+            $message->getFullMessage(),
         );
     }
 }
